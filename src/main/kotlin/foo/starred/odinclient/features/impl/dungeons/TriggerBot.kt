@@ -4,33 +4,38 @@ import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.DropdownSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.*
+import com.odtheking.odin.events.LevelEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.equalsOneOf
 import com.odtheking.odin.utils.noControlCodes
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
 import com.odtheking.odin.utils.skyblock.dungeon.M7Phases
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.rightClick
+import foo.starred.snowbird.api.client
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.rightClick
 
 object TriggerBot : Module(
     name = "TriggerBot",
     description = "Trigger bots for things!",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
+    //~ if >= 26.2 'false)' -> 'false, desc = "Crystal triggerbot")'
     private val crystalDropdown by DropdownSetting("Crystal Dropdown", false)
     private val crystal by BooleanSetting("Crystal", false, desc = "Automatically takes and places crystals.").withDependency { crystalDropdown }
     private val take by BooleanSetting("Take", true, desc = "Takes crystals.").withDependency { crystal && crystalDropdown }
     private val place by BooleanSetting("Place", true, desc = "Places crystals.").withDependency { crystal && crystalDropdown }
 
+    //~ if >= 26.2 'false)' -> 'false, desc = "Secret triggerbot")'
     private val secretDropdown by DropdownSetting("Secret Dropdown", false)
     private val secret by BooleanSetting("Secret", false, desc = "Automatically clicks secrets.").withDependency { secretDropdown }
+    //~ if >= 26.2 '0, 1000' -> '0..1000'
     private val delay by NumberSetting("Delay", 200L, 0, 1000, unit = "ms", desc = "The delay between each click.").withDependency { secret && secretDropdown }
 
     private var click = 0L
@@ -38,7 +43,7 @@ object TriggerBot : Module(
     private val clicked = mutableMapOf<BlockPos, Long>()
 
     init {
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (!crystal) return@on
             if (!DungeonUtils.inBoss) return@on
             if (DungeonUtils.getF7Phase() != M7Phases.P1) return@on
@@ -65,11 +70,11 @@ object TriggerBot : Module(
             click = System.currentTimeMillis()
         }
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (!secret) return@on
             if (!DungeonUtils.inDungeons) return@on
             if (DungeonUtils.inBoss) return@on
-            if (mc.screen != null) return@on
+            if (client.screen != null) return@on
             if (System.currentTimeMillis() - click0 < delay) return@on
             if (DungeonUtils.currentRoomName.equalsOneOf("Water Board", "Three Weirdos")) return@on
 
@@ -77,7 +82,7 @@ object TriggerBot : Module(
             if (hit.type != HitResult.Type.BLOCK) return@on
 
             val pos = (hit as? BlockHitResult)?.blockPos ?: return@on
-            val state = world.getBlockState(pos)
+            val state = client.level?.getBlockState(pos) ?: return@on
 
             val n = System.currentTimeMillis()
             clicked.entries.removeIf { it.value + 1000L <= n }

@@ -34,16 +34,16 @@
 
 package foo.starred.odinclient.features.impl.general
 
-import com.odtheking.odin.events.ChatMessageEvent
+import com.odtheking.odin.events.MessageEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.sendCommand
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.api.category.OdinClientCategory
 
 object EscrowFix : Module(
     name = "Escrow Fix",
     description = "Automatically reopens the ah/bz when it gets closed by escrow.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val messages = mapOf(
         "There was an error with the auction house! (AUCTION_EXPIRED_OR_NOT_FOUND)" to "ah",
@@ -55,8 +55,8 @@ object EscrowFix : Module(
     private val regex = Regex("Escrow refunded (\\d+) coins for Bazaar Instant Buy Submit!")
 
     init {
-        on<ChatMessageEvent> {
-            val command = messages[value] ?: if (value.matches(regex)) "bz" else null
+        on<MessageEvent.Chat> {
+            val command = messages[message] ?: if (message.matches(regex)) "bz" else null
             command?.let { sendCommand(it) }
         }
     }

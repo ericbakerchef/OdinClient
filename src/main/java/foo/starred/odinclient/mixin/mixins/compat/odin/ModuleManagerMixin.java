@@ -1,4 +1,4 @@
-package foo.starred.odinclient.mixin.mixins.od;
+package foo.starred.odinclient.mixin.mixins.compat.odin;
 
 import com.odtheking.odin.config.ModuleConfig;
 import com.odtheking.odin.features.Module;

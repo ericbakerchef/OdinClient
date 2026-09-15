@@ -43,41 +43,54 @@ import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.equalsOneOf
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
 import com.odtheking.odin.utils.skyblock.dungeon.M7Phases
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
-import foo.starred.odinclient.utils.Category
 
 object FuckDiorite : Module(
     name = "Fuck Diorite",
     description = "Replaces the pillars in the storm fight with glass.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val GLASS_STATE = Blocks.GLASS.defaultBlockState()
-
     private val STAINED_GLASS_BLOCKS = arrayOf(
+        //~ if >= 26.2 'WHITE_STAINED_GLASS' -> 'STAINED_GLASS.white()'
         Blocks.WHITE_STAINED_GLASS,
+        //~ if >= 26.2 'ORANGE_STAINED_GLASS' -> 'STAINED_GLASS.orange()'
         Blocks.ORANGE_STAINED_GLASS,
+        //~ if >= 26.2 'MAGENTA_STAINED_GLASS' -> 'STAINED_GLASS.magenta()'
         Blocks.MAGENTA_STAINED_GLASS,
+        //~ if >= 26.2 'LIGHT_BLUE_STAINED_GLASS' -> 'STAINED_GLASS.lightBlue()'
         Blocks.LIGHT_BLUE_STAINED_GLASS,
+        //~ if >= 26.2 'YELLOW_STAINED_GLASS' -> 'STAINED_GLASS.yellow()'
         Blocks.YELLOW_STAINED_GLASS,
+        //~ if >= 26.2 'LIME_STAINED_GLASS' -> 'STAINED_GLASS.lime()'
         Blocks.LIME_STAINED_GLASS,
+        //~ if >= 26.2 'PINK_STAINED_GLASS' -> 'STAINED_GLASS.pink()'
         Blocks.PINK_STAINED_GLASS,
+        //~ if >= 26.2 'GRAY_STAINED_GLASS' -> 'STAINED_GLASS.gray()'
         Blocks.GRAY_STAINED_GLASS,
+        //~ if >= 26.2 'LIGHT_GRAY_STAINED_GLASS' -> 'STAINED_GLASS.lightGray()'
         Blocks.LIGHT_GRAY_STAINED_GLASS,
+        //~ if >= 26.2 'CYAN_STAINED_GLASS' -> 'STAINED_GLASS.cyan()'
         Blocks.CYAN_STAINED_GLASS,
+        //~ if >= 26.2 'PURPLE_STAINED_GLASS' -> 'STAINED_GLASS.purple()'
         Blocks.PURPLE_STAINED_GLASS,
+        //~ if >= 26.2 'BLUE_STAINED_GLASS' -> 'STAINED_GLASS.blue()'
         Blocks.BLUE_STAINED_GLASS,
+        //~ if >= 26.2 'BROWN_STAINED_GLASS' -> 'STAINED_GLASS.brown()'
         Blocks.BROWN_STAINED_GLASS,
+        //~ if >= 26.2 'GREEN_STAINED_GLASS' -> 'STAINED_GLASS.green()'
         Blocks.GREEN_STAINED_GLASS,
+        //~ if >= 26.2 'RED_STAINED_GLASS' -> 'STAINED_GLASS.red()'
         Blocks.RED_STAINED_GLASS,
+        //~ if >= 26.2 'BLACK_STAINED_GLASS' -> 'STAINED_GLASS.black()'
         Blocks.BLACK_STAINED_GLASS
     )
 
     private val pillarBasedColor by BooleanSetting("Pillar Based", true, desc = "Swaps the diorite in the pillar to a corresponding color.").withDependency { !schitzo }
-    private val colorIndex by SelectorSetting("Color", "None", arrayListOf(
-        "NONE", "WHITE", "ORANGE", "MAGENTA", "LIGHT_BLUE", "YELLOW", "LIME", "PINK",
-        "GRAY", "LIGHT_GRAY", "CYAN", "PURPLE", "BLUE", "BROWN", "GREEN", "RED", "BLACK"
-    ), desc = "Color for the stained glass.").withDependency { !pillarBasedColor && !schitzo }
+    //~ if >= 26.2 '"None", arrayListOf("NONE", "WHITE", "ORANGE", "MAGENTA", "LIGHT_BLUE", "YELLOW", "LIME", "PINK", "GRAY", "LIGHT_GRAY", "CYAN", "PURPLE", "BLUE", "BROWN", "GREEN", "RED", "BLACK")' -> 'GlassColor.NONE'
+    private val colorIndex by SelectorSetting("Color", "None", arrayListOf("NONE", "WHITE", "ORANGE", "MAGENTA", "LIGHT_BLUE", "YELLOW", "LIME", "PINK", "GRAY", "LIGHT_GRAY", "CYAN", "PURPLE", "BLUE", "BROWN", "GREEN", "RED", "BLACK"), desc = "Color for the stained glass.").withDependency { !pillarBasedColor && !schitzo }
 
     private val schitzo by BooleanSetting("Schitzo mode", false, desc = "Schtizoing.")
 
@@ -118,10 +131,17 @@ object FuckDiorite : Module(
         val newState = when {
             schitzo -> STAINED_GLASS_BLOCKS.random().defaultBlockState()
             pillarBasedColor -> STAINED_GLASS_BLOCKS[pillarColors[pillarIndex]].defaultBlockState()
+            //~ if >= 26.2 'colorIndex != 0 -> STAINED_GLASS_BLOCKS[colorIndex - 1]' -> 'colorIndex != GlassColor.NONE -> STAINED_GLASS_BLOCKS[colorIndex.ordinal - 1]'
             colorIndex != 0 -> STAINED_GLASS_BLOCKS[colorIndex - 1].defaultBlockState()
             else -> GLASS_STATE
         }
 
         mc.level?.setBlock(pos, newState, 3)
+    }
+
+    @Suppress("Unused")
+    private enum class GlassColor {
+        NONE, WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME, PINK,
+        GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK
     }
 }

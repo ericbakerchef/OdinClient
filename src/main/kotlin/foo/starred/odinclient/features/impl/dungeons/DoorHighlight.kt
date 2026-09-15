@@ -36,9 +36,7 @@ package foo.starred.odinclient.features.impl.dungeons
 
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.ColorSetting
-import com.odtheking.odin.events.ChatMessageEvent
-import com.odtheking.odin.events.LevelEvent
-import com.odtheking.odin.events.RenderEvent
+import com.odtheking.odin.events.*
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.Module
@@ -51,16 +49,19 @@ import com.odtheking.odin.utils.alert
 import com.odtheking.odin.utils.equalsOneOf
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.phys.AABB
 
+//? if >= 26.2
+//import com.odtheking.odin.utils.render.BoxStyle
+
 object DoorHighlight : Module(
     name = "Door Highlight (C)",
     description = "Highlights wither and blood doors and keys in dungeons.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val announceKeySpawn by BooleanSetting("Announce Key Spawn", true, desc = "Announces when a key is spawned.")
     private val doorHighlightColor by ColorSetting("Door Highlight Color", Colors.MINECRAFT_RED.withAlpha(0.8f), true, desc = "Color for locked doors.")
@@ -85,13 +86,13 @@ object DoorHighlight : Module(
         get() = enabled && depthCheck
 
     init {
-        on<ChatMessageEvent> {
+        on<MessageEvent.Chat> {
             if (!DungeonUtils.inClear) return@on
             when {
-                witherKeyObtainRegex.matches(value) || witherKeyPickedUpRegex.matches(value) -> witherKeys++
-                witherDoorOpenRegex.matches(value) -> witherKeys = (witherKeys - 1).coerceAtLeast(0)
-                bloodKeyObtainRegex.matches(value) || bloodKeyPickedUpRegex.matches(value) -> bloodKey = true
-                bloodDoorOpenRegex.matches(value) -> { bloodKey = false; bloodOpened = true }
+                witherKeyObtainRegex.matches(message) || witherKeyPickedUpRegex.matches(message) -> witherKeys++
+                witherDoorOpenRegex.matches(message) -> witherKeys = (witherKeys - 1).coerceAtLeast(0)
+                bloodKeyObtainRegex.matches(message) || bloodKeyPickedUpRegex.matches(message) -> bloodKey = true
+                bloodDoorOpenRegex.matches(message) -> { bloodKey = false; bloodOpened = true }
             }
         }
 
@@ -105,6 +106,7 @@ object DoorHighlight : Module(
             if (announceKeySpawn) alert("§${currentKey?.colorCode}${entity.name.string}§7 spawned!")
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (!DungeonUtils.inClear) return@on
 
@@ -121,6 +123,7 @@ object DoorHighlight : Module(
                     DoorType.Blood -> bloodKey
                     else -> false
                 }
+                //~ if >= 26.2 '2' -> 'BoxStyle.FILLED_OUTLINE'
                 drawStyledBox(box, if (isOpenable) openableColor else doorHighlightColor, 2, false)
             }
 
@@ -131,6 +134,7 @@ object DoorHighlight : Module(
                     return@on
                 }
                 val position = keyType.entity?.position() ?: return@on
+                //~ if >= 26.2 '2' -> 'BoxStyle.FILLED_OUTLINE'
                 drawStyledBox(AABB.unitCubeFromLowerCorner(position.add(-0.5, 1.0, -0.5)), keyType.color(), 2, depthCheck)
             }
         }

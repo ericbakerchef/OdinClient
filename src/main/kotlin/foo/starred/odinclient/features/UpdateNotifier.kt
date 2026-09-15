@@ -3,17 +3,17 @@ package foo.starred.odinclient.features
 import com.google.gson.JsonArray
 import com.odtheking.odin.OdinMod.mc
 import com.odtheking.odin.OdinMod.scope
-import com.odtheking.odin.events.*
+import com.odtheking.odin.events.LevelEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.network.WebUtils
 import com.odtheking.odin.utils.setTitle
+import foo.starred.odinclient.OdinClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
-import foo.starred.odinclient.OdinClient
 import java.net.URI
 
 object UpdateNotifier {
@@ -57,7 +57,7 @@ object UpdateNotifier {
     private fun run() {
         if (ModSettings.updateOnce && bool) return
 
-        val current = OdinClient.MOD_VERSION.parse() ?: return
+        val current = OdinClient.version.parse() ?: return
         val latest = latestVersion?.takeIf { it > current } ?: return
 
         mc.execute {

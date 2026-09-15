@@ -35,28 +35,34 @@
 package foo.starred.odinclient.features.impl.dungeons
 
 import com.odtheking.odin.clickgui.settings.impl.SelectorSetting
-import com.odtheking.odin.events.*
+import com.odtheking.odin.events.ScreenEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.equalsOneOf
 import com.odtheking.odin.utils.noControlCodes
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import foo.starred.odinclient.utils.Category
 
 object CloseChest : Module(
     name = "Close Chest",
     description = "Allows you to instantly close chests with any key or automatically.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
+    private enum class Mode {
+        AUTO, ANY_KEY
+    }
+
+    //~ if >= 26.2 '"Auto", arrayListOf("Auto", "Any Key")' -> 'Mode.AUTO'
     private val mode by SelectorSetting("Mode", "Auto", arrayListOf("Auto", "Any Key"), desc = "The mode to use.")
 
     init {
         onReceive<ClientboundOpenScreenPacket> {
+            //~ if >= 26.2 'mode != 0' -> 'mode != Mode.AUTO'
             if (mode != 0) return@onReceive
             if (!DungeonUtils.inDungeons) return@onReceive
             if (!title.string.noControlCodes.equalsOneOf("Chest", "Large Chest")) return@onReceive
@@ -80,6 +86,7 @@ object CloseChest : Module(
     }
 
     private fun handleInput(screen: Screen?) {
+        //~ if >= 26.2 'mode != 1' -> 'mode != Mode.ANY_KEY'
         if (mode != 1) return
         val screen = screen as? ContainerScreen? ?: return
         if (screen.title.string.noControlCodes.equalsOneOf("Chest", "Large Chest")) mc.player?.closeContainer()

@@ -3,20 +3,20 @@ package foo.starred.odinclient.features.impl.general
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
 import com.odtheking.odin.clickgui.settings.impl.SelectorSetting
-import com.odtheking.odin.events.ChatMessageEvent
-import com.odtheking.odin.events.RenderEvent
-import com.odtheking.odin.events.TickEvent
+import com.odtheking.odin.events.*
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.Colors
 import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.renderBoundingBox
+import foo.starred.odinclient.events.TickStartEvent
 import foo.starred.odinclient.mixin.accessors.InventoryAccessor
+import foo.starred.odinclient.api.category.OdinClientCategory
 import foo.starred.odinclient.utils.RotationUtils
-import foo.starred.odinclient.utils.Category
 import foo.starred.odinclient.utils.leftClick
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
+//~ if >= 26.2 'EntityType' -> 'EntityTypes'
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.monster.skeleton.Skeleton
@@ -31,19 +31,25 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
+//? if >= 26.2
+//import com.odtheking.odin.utils.render.BoxStyle
+
 object AutoDojo : Module(
     name = "Auto Dojo (!!!)",
     description = "Automatically completes Hypixel SkyBlock dojo tests",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val hover by BooleanSetting("HOVER HERE!!!", true, "Use at your own risk.")
 
     private val enableControl by BooleanSetting("Enable Control", true, desc = "Automatically aim at skeleton in Test of Control")
+    //~ if >= 26.2 '1.0, 20.0' -> '1.0..20.0'
     private val controlPredictionTicks by NumberSetting("Control Prediction Ticks", 5.0, 1.0, 20.0, 1.0, desc = "How many ticks ahead to predict skeleton movement")
     private val enableMastery by BooleanSetting("Enable Mastery", true, desc = "Automatically shoot blocks in Test of Mastery")
+    //~ if >= 26.2 '0.0, 2000.0' -> '0.0..2000.0'
     private val masteryShootDelay by NumberSetting("Mastery Shoot Delay (ms)", 600.0, 0.0, 2000.0, 50.0, desc = "Time remaining on yellow block before shooting")
     private val enableDiscipline by BooleanSetting("Enable Discipline", true, desc = "Automatically switch swords in Test of Discipline")
     private val disciplineAutoAttack by BooleanSetting("Discipline Auto Attack", true, desc = "Automatically attack mobs in Test of Discipline")
+    //~ if >= 26.2 '"Filled", listOf("Filled", "Outline", "Filled Outline")' -> 'BoxStyle.FILLED'
     private val renderStyle by SelectorSetting("Render Style", "Filled", listOf("Filled", "Outline", "Filled Outline"), desc = "Style of the box.")
 
     private var dojoType = DojoType.NONE
@@ -71,8 +77,8 @@ object AutoDojo : Module(
     )
 
     init {
-        on<ChatMessageEvent> {
-            val text = value.lowercase()
+        on<MessageEvent.Chat> {
+            val text = message.lowercase()
 
             if ("rank:" in text) {
                 dojoType = DojoType.NONE
@@ -100,7 +106,7 @@ object AutoDojo : Module(
             }
         }
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (dojoType == DojoType.NONE) return@on
 
             when (dojoType) {
@@ -111,6 +117,7 @@ object AutoDojo : Module(
             }
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (dojoType == DojoType.NONE) return@on
 
@@ -156,6 +163,7 @@ object AutoDojo : Module(
 
         // Find nearest wither skeleton (excluding decoys with redstone helmet)
         for (entity in level.entitiesForRendering()) {
+            //~ if >= 26.2 'EntityType' -> 'EntityTypes'
             if (entity is WitherSkeleton || (entity is Skeleton && entity.type == EntityType.WITHER_SKELETON)) {
                 skeletonsFound++
                 if (entity.getItemBySlot(EquipmentSlot.HEAD).item == Items.REDSTONE_BLOCK) continue
@@ -193,6 +201,7 @@ object AutoDojo : Module(
         // Clean up expired blocks and verify blocks still exist
         masteryBlocks.removeAll { block ->
             if (block.expiryTime < now) return@removeAll true
+            //~ if >= 26.2 'YELLOW_WOOL' -> 'WOOL.yellow()'
             level.getBlockState(BlockPos(block.x, block.y, block.z)).block != Blocks.YELLOW_WOOL
         }
 
@@ -297,6 +306,7 @@ object AutoDojo : Module(
                     val pos = playerPos.offset(x, y, z)
                     val dist = sqrt((x * x + z * z).toDouble())
                     if (dist > 25) continue
+                    //~ if >= 26.2 'YELLOW_WOOL' -> 'WOOL.yellow()'
                     if (level.getBlockState(pos).block != Blocks.YELLOW_WOOL) continue
 
                     val isDuplicate = masteryBlocks.any { it.x == pos.x && it.z == pos.z && it.color == "yellow" }

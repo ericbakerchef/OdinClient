@@ -38,15 +38,15 @@ import com.mojang.blaze3d.platform.InputConstants
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.KeybindSetting
 import com.odtheking.odin.features.Module
+import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
-import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
-import foo.starred.odinclient.utils.Category
 
 object FarmKeys : Module(
     name = "Farm keys",
     description = "Temporarily changes your minecraft keybind configuration for farming in Skyblock.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private var prev: Int? = null
     private var prev0: Int? = null

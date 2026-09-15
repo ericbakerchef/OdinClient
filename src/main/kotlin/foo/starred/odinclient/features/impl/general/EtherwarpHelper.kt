@@ -2,23 +2,24 @@ package foo.starred.odinclient.features.impl.general
 
 import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.customData
 import com.odtheking.odin.utils.itemId
+import foo.starred.odinclient.events.InputEvent
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.rightClick
+import foo.starred.snowbird.api.client
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
-import foo.starred.odinclient.events.InputEvent
-import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.rightClick
 
 object EtherwarpHelper : Module(
     name = "Etherwarp helper",
     description = "Helper features for etherwarp",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val leftClickEW by BooleanSetting("Left click etherwarp", true, desc = "Turns your left clicks into right clicks when holding an etherwarp item")
     private val lceShift by BooleanSetting("Shift automatically", true, desc = "Automatically shifts for you as well.").withDependency { leftClickEW }
@@ -28,7 +29,7 @@ object EtherwarpHelper : Module(
 
     init {
         on<InputEvent.Mouse.Press> {
-            if (mc.screen != null) return@on
+            if (client.screen != null) return@on
             if (!leftClickEW) return@on
             if (buttonInfo.button != 0) return@on
 
@@ -49,12 +50,12 @@ object EtherwarpHelper : Module(
             }
         }
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (ticksLeft == 0) return@on
 
             ticksLeft--
 
-            if (mc.screen != null) return@on
+            if (client.screen != null) return@on
             when (ticksLeft) {
                 1 -> action()
                 0 -> KeyMapping.set((mc.options.keyShift as KeyMappingAccessor).boundKey, false)

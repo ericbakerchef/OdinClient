@@ -1,12 +1,12 @@
 package foo.starred.odinclient.features.impl.general
 
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.events.core.onSend
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.skyblock.LocationUtils
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
 import foo.starred.odinclient.utils.guiClick
 import foo.starred.snowbird.api.client
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -20,7 +20,7 @@ import net.minecraft.world.item.Items
 object AutoHarp : Module(
     name = "Auto Harp",
     description = "Tries to do the Harp for you!",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private var bool: Boolean = false
     private var hash: Int = 0
@@ -42,7 +42,7 @@ object AutoHarp : Module(
             bool = false
         }
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (!bool) return@on
 
             val screen = client.screen as? AbstractContainerScreen<*> ?: return@on

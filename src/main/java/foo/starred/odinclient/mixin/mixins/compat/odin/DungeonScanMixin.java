@@ -1,4 +1,4 @@
-package foo.starred.odinclient.mixin.mixins.od;
+package foo.starred.odinclient.mixin.mixins.compat.odin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.odtheking.odin.features.impl.dungeon.map.DungeonScan;

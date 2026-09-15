@@ -38,15 +38,16 @@ import com.odtheking.odin.clickgui.settings.impl.ActionSetting
 import com.odtheking.odin.clickgui.settings.impl.ListSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
 import com.odtheking.odin.clickgui.settings.impl.SelectorSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.lore
 import com.odtheking.odin.utils.modMessage
-import com.odtheking.odin.utils.noControlCodes
 import foo.starred.odinclient.OdinClient
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.command
 import foo.starred.odinclient.utils.guiClick
+import foo.starred.snowbird.api.client
 import foo.starred.snowbird.utils.stripped
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
@@ -55,26 +56,29 @@ import net.minecraft.world.item.Items
 
 object AutoSell : Module(
     name = "Auto Sell",
-    description = "Automatically sell items in trades and cookie menus. (/autosell)",
-    category = Category.CHEATS
+    description = "Automatically sell items in trades and cookie menus. (/odc sell)",
+    category = OdinClientCategory.CHEATS
 ) {
-    val sellList by ListSetting("Sell list", mutableSetOf<String>())
+    private val sellList by ListSetting("Sell list", mutableSetOf<String>())
+    //~ if >= 26.2 '2, 10' -> '2..10'
     private val delay by NumberSetting("Delay", 6, 2, 10, 1, desc = "The delay between each sell action.", unit = " ticks")
+    //~ if >= 26.2 '0, 5' -> '0..5'
     private val randomization by NumberSetting("Randomization", 1, 0, 5, 1, desc = "Random delay variance", unit = " ticks")
-    private val clickType1 by SelectorSetting("Click Type", "Shift", arrayListOf("Shift", "Middle", "Left"), desc = "The type of click to use when selling items.")
+    //~ if >= 26.2 '"Shift", options = listOf("Shift", "Middle", "Left")' -> 'ClickType.Shift'
+    private val clickType1 by SelectorSetting("Click Type", "Shift", options = listOf("Shift", "Middle", "Left"), desc = "The type of click to use when selling items.")
     private val addDefaults by ActionSetting("Add defaults", desc = "Add default dungeon items to the auto sell list.") {
         sellList.addAll(defaultItems)
         modMessage("§aAdded default items to auto sell list")
-        OdinClient.moduleConfig.save()
+        OdinClient.config.save()
     }
 
     private var last = 0L
     private var next = 0L
 
     init {
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (sellList.isEmpty()) return@on
-            val menu = (mc.screen as? AbstractContainerScreen<*>)?.menu ?: return@on
+            val menu = (client.screen as? AbstractContainerScreen<*>)?.menu ?: return@on
             val now = System.currentTimeMillis()
             if (now - last < next) return@on
 
@@ -87,7 +91,7 @@ object AutoSell : Module(
                 if (s.container !is Inventory) continue
 
                 val stack = s.item.takeIf { !it.isEmpty } ?: continue
-                val name = stack.hoverName.string.noControlCodes
+                val name = stack.hoverName.string.stripped()
 
                 if (!sellList.any { name.contains(it, true) }) continue
                 if (blacklist.any { name.contains(it, true) }) continue
@@ -159,4 +163,15 @@ object AutoSell : Module(
 
     private val blacklist = listOf("skeleton master chestplate")
 
+    //? if >= 26.2 {
+    /*private enum class ClickType(val input: ContainerInput) {
+        Shift(ContainerInput.QUICK_MOVE),
+        Middle(ContainerInput.CLONE),
+        Left(ContainerInput.PICKUP);
+
+        fun get(): ContainerInput {
+            return input
+        }
+    }
+    *///? }
 }

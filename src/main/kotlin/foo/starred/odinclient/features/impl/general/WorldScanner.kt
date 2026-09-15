@@ -13,6 +13,7 @@ import com.odtheking.odin.utils.render.drawStyledBox
 import com.odtheking.odin.utils.render.drawText
 import com.odtheking.odin.utils.skyblock.Island
 import com.odtheking.odin.utils.skyblock.LocationUtils
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
@@ -21,13 +22,15 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import foo.starred.odinclient.utils.Category
 import java.util.concurrent.ConcurrentHashMap
+
+//? if >= 26.2
+//import com.odtheking.odin.utils.render.BoxStyle
 
 object WorldScanner : Module(
     name = "World Scanner",
     description = "Scans and highlights structures in Crystal Hollows",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val scanCrystals by BooleanSetting("Scan Crystals", true, desc = "Scans for crystal waypoints")
     private val scanMobSpots by BooleanSetting("Scan Mob Spots", true, desc = "Scans for mob spawn locations")
@@ -36,7 +39,9 @@ object WorldScanner : Module(
     private val scanWormFishing by BooleanSetting("Scan Worm Fishing", false, desc = "Scans for worm fishing spots")
     private val lavaEsp by BooleanSetting("Lava ESP", false, desc = "Highlights lava blocks")
     private val waterEsp by BooleanSetting("Water ESP", false, desc = "Highlights water blocks")
+    //~ if >= 26.2 '8, 128' -> '8..128'
     private val espRange by NumberSetting("ESP Range", 32, 8, 128, 1, unit = "m", desc = "Range for lava and water ESP")
+    //~ if >= 26.2 '"Outline", listOf("Filled", "Outline", "Filled Outline")' -> 'BoxStyle.OUTLINE'
     private val renderStyle by SelectorSetting("Render Style", "Outline", listOf("Filled", "Outline", "Filled Outline"), desc = "Style of the box.")
     private val renderText by BooleanSetting("Render Text", true, desc = "Renders 3D text labels at waypoints")
     private val sendCoordsInChat by BooleanSetting("Send Coords in Chat", true, desc = "Sends coordinates to chat when found")
@@ -71,10 +76,13 @@ object WorldScanner : Module(
         val offset: BlockPos = BlockPos.ZERO,
         val category: Int // 0: Crystal, 1: Mob, 2: Grotto, 3: Dragon, 4: Worm
     ) {
+        //~ if >= 26.2 'RED_WOOL' -> 'WOOL.red()'
         KING("King", listOf(Blocks.RED_WOOL, Blocks.DARK_OAK_STAIRS, Blocks.DARK_OAK_STAIRS, Blocks.DARK_OAK_STAIRS), Colors.MINECRAFT_GOLD, Quarter.GOBLIN, BlockPos(1, -1, 2), 0),
         QUEEN("Queen", listOf(Blocks.STONE, Blocks.ACACIA_WOOD, Blocks.ACACIA_WOOD, Blocks.ACACIA_WOOD, Blocks.ACACIA_WOOD, Blocks.CAULDRON), Colors.MINECRAFT_GOLD, Quarter.ANY, BlockPos(0, 5, 0), 0),
         DIVAN("Divan", listOf(Blocks.QUARTZ_PILLAR, Blocks.QUARTZ_STAIRS, Blocks.STONE_BRICK_STAIRS, Blocks.CHISELED_STONE_BRICKS), Colors.MINECRAFT_GREEN, Quarter.MITHRIL, BlockPos(0, 5, 0), 0),
         CITY("City", listOf(Blocks.STONE_BRICKS, Blocks.COBBLESTONE, Blocks.COBBLESTONE, Blocks.COBBLESTONE, Blocks.COBBLESTONE, Blocks.COBBLESTONE_STAIRS, Blocks.POLISHED_ANDESITE, Blocks.POLISHED_ANDESITE, Blocks.DARK_OAK_STAIRS), Colors.MINECRAFT_AQUA, Quarter.PRECURSOR, BlockPos(24, 0, -17), 0),
+        //~ if >= 26.2 'LIME_TERRACOTTA' -> 'DYED_TERRACOTTA.lime()'
+        //~ if >= 26.2 'GREEN_TERRACOTTA' -> 'DYED_TERRACOTTA.green()'
         TEMPLE("Temple", listOf(Blocks.BEDROCK, Blocks.BEDROCK, Blocks.BEDROCK, Blocks.BEDROCK, Blocks.STONE, Blocks.CLAY, Blocks.CLAY, Blocks.CLAY, Blocks.OAK_LEAVES, Blocks.OAK_LEAVES, Blocks.LIME_TERRACOTTA, Blocks.LIME_TERRACOTTA, Blocks.GREEN_TERRACOTTA), Colors.MINECRAFT_DARK_PURPLE, Quarter.ANY, BlockPos(-45, 47, -18), 0),
         BAL("Bal", listOf(Blocks.LAVA, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER, Blocks.BARRIER), Colors.MINECRAFT_GOLD, Quarter.MAGMA, BlockPos(0, 1, 0), 0),
         CORLEONE_DOCK("Corleone Dock", listOf(
@@ -89,6 +97,8 @@ object WorldScanner : Module(
         XALX("Xalx", listOf(Blocks.STONE, Blocks.COAL_BLOCK, Blocks.FIRE, Blocks.NETHER_QUARTZ_ORE, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR), Colors.MINECRAFT_GREEN, Quarter.GOBLIN, BlockPos(-2, 1, -2), 1),
         PETE("Pete", listOf(Blocks.NETHERRACK, Blocks.FIRE, Blocks.IRON_BARS, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR, Blocks.AIR), Colors.MINECRAFT_GOLD, Quarter.GOBLIN, BlockPos.ZERO, 1),
         ODAWA("Odawa", listOf(Blocks.JUNGLE_LOG, Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_STAIRS, Blocks.JUNGLE_LOG), Colors.MINECRAFT_GREEN, Quarter.JUNGLE, BlockPos.ZERO, 1),
+        //~ if >= 26.2 'RED_WOOL' -> 'WOOL.red()'
+        //~ if >= 26.2 'RED_TERRACOTTA' -> 'DYED_TERRACOTTA.red()'
         GOLDEN_DRAGON("Golden Dragon", listOf(Blocks.STONE, Blocks.RED_TERRACOTTA, Blocks.RED_TERRACOTTA, Blocks.RED_TERRACOTTA, Blocks.PLAYER_HEAD, Blocks.RED_WOOL), Colors.WHITE, Quarter.ANY, BlockPos(0, -3, 5), 3)
     }
 
@@ -106,6 +116,7 @@ object WorldScanner : Module(
             clearWaypoints()
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (!LocationUtils.isCurrentArea(Island.CrystalHollows)) return@on
 
@@ -148,6 +159,7 @@ object WorldScanner : Module(
         }
     }
 
+    //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
     private fun RenderEvent.Extract.renderWaypoint(name: String, pos: BlockPos, color: Color, showText: Boolean = true) {
         val centerPos = Vec3.atCenterOf(pos)
         val aabb = AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos))
@@ -184,6 +196,7 @@ object WorldScanner : Module(
 
                     // High efficiency branch based on entry-point block
                     when (block) {
+                        //~ if >= 26.2 'RED_WOOL' -> 'WOOL.red()'
                         Blocks.RED_WOOL -> {
                             if (scanCrystals && !waypoints.containsKey("King") && Quarter.GOBLIN.test(worldX, y, worldZ)) {
                                 if (checkSequence(chunk, x, y, z, Structure.KING.blocks)) addWaypoint(Structure.KING, mutablePos.set(worldX, y, worldZ))
@@ -259,6 +272,8 @@ object WorldScanner : Module(
                                 if (checkSequence(chunk, x, y, z, Structure.ODAWA.blocks)) addWaypoint(Structure.ODAWA, mutablePos.set(worldX, y, worldZ))
                             }
                         }
+                        //~ if >= 26.2 'MAGENTA_STAINED_GLASS' -> 'STAINED_GLASS.magenta()'
+                        //~ if >= 26.2 'MAGENTA_STAINED_GLASS_PANE' -> 'STAINED_GLASS_PANE.magenta()'
                         Blocks.MAGENTA_STAINED_GLASS, Blocks.MAGENTA_STAINED_GLASS_PANE -> {
                             if (scanFairyGrottos && !waypoints.containsKey("Fairy Grotto") && !Quarter.NUCLEUS.test(worldX, y, worldZ)) {
                                 addWaypointDirect("Fairy Grotto", mutablePos.set(worldX, y, worldZ), Colors.MINECRAFT_LIGHT_PURPLE, 2)

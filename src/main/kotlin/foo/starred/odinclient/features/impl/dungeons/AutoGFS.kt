@@ -37,8 +37,7 @@ package foo.starred.odinclient.features.impl.dungeons
 import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.ChatMessageEvent
-import com.odtheking.odin.events.TickEvent
+import com.odtheking.odin.events.MessageEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.features.impl.dungeon.map.tile.RoomType
@@ -51,13 +50,15 @@ import com.odtheking.odin.utils.sendCommand
 import com.odtheking.odin.utils.skyblock.KuudraUtils
 import com.odtheking.odin.utils.skyblock.LocationUtils
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
+import foo.starred.odinclient.events.TickStartEvent
 import foo.starred.odinclient.mixin.accessors.PuzzleSolversAccessor
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.snowbird.api.client
 
 object AutoGFS : Module(
     name = "Auto GFS",
     description = "Automatically refills certain items from your sacks.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val inSkyblock by BooleanSetting("In Skyblock", true, desc = "gfs everywhere in skyblock.")
     private val inKuudra by BooleanSetting("In Kuudra", true, desc = "Only gfs in Kuudra.").withDependency { !inSkyblock }
@@ -65,6 +66,7 @@ object AutoGFS : Module(
 
     private val refillOnDungeonStart by BooleanSetting("Refill on Dungeon Start", true, desc = "Refill when a dungeon starts.")
     private val refillOnTimer by BooleanSetting("Refill on Timer", false, desc = "Refill on a timed interval.")
+    //~ if >= 26.2 '1, 60' -> '1..60'
     private val timerIncrements by NumberSetting("Timer Increments", 5, 1, 60, 1, desc = "The interval in which to refill.", unit = "s").withDependency { refillOnTimer }
 
     private val refillPearl by BooleanSetting("Refill Pearl", true, desc = "Refill ender pearls.")
@@ -79,7 +81,7 @@ object AutoGFS : Module(
     private var last = 0
 
     init {
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (!refillOnTimer) return@on
             if (++last < timerIncrements * 20) return@on
 
@@ -87,9 +89,9 @@ object AutoGFS : Module(
             refill()
         }
 
-        on<ChatMessageEvent> {
+        on<MessageEvent.Chat> {
             when {
-                value.matches(puzzleFailRegex) -> {
+                message.matches(puzzleFailRegex) -> {
                     if (!autoGetDraft || DungeonUtils.currentRoom?.data?.type != RoomType.PUZZLE) return@on
                     if ((PuzzleSolvers as PuzzleSolversAccessor).invokeDraft()) return@on
 
@@ -99,7 +101,7 @@ object AutoGFS : Module(
                     }
                 }
 
-                value.matches(startRegex) -> {
+                message.matches(startRegex) -> {
                     if (refillOnDungeonStart) refill()
                 }
             }
@@ -107,7 +109,7 @@ object AutoGFS : Module(
     }
 
     private fun refill() {
-        if (mc.screen != null) return
+        if (client.screen != null) return
         val inventory = mc.player?.inventory ?: return
         if (inSkyblock && !LocationUtils.isInSkyblock) return
         if (!inSkyblock && !((inKuudra && KuudraUtils.inKuudra) || (inDungeon && DungeonUtils.inDungeons))) return

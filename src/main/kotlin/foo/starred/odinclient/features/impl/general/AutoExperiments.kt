@@ -2,15 +2,14 @@ package foo.starred.odinclient.features.impl.general
 
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.GuiEvent
 import com.odtheking.odin.events.ScreenEvent
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.hasGlint
 import com.odtheking.odin.utils.noControlCodes
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
 import foo.starred.odinclient.utils.guiClick
 import foo.starred.snowbird.api.client
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -22,11 +21,14 @@ import java.util.concurrent.ConcurrentHashMap
 object AutoExperiments : Module(
     name = "Auto Experiments",
     description = "Automatically click on the Chronomatron and Ultrasequencer experiments.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
+    //~ if >= 26.2 '100, 1000' -> '100..1000'
     private val clickDelay by NumberSetting("Click Delay", 200, 100, 1000, 10, unit = "ms", desc = "Time in ms between automatic test clicks.")
+    //~ if >= 26.2 '0, 1000' -> '0..1000'
     private val delayVariety by NumberSetting("Delay variety", 50, 0, 1000, 10, unit = "ms", desc = "Variance in delays")
     private val autoClose by BooleanSetting("Auto Close", true, desc = "Automatically close the GUI after completing the experiment.")
+    //~ if >= 26.2 '0, 3' -> '0..3'
     private val serumCount by NumberSetting("Serum Count", 0, 0, 3, 1, desc = "Consumed Metaphysical Serum count.")
     private val getMaxXp by BooleanSetting("Get Max XP", false, desc = "Solve Chronomatron to 15 and Ultrasequencer to 20 for max XP.")
 
@@ -46,14 +48,14 @@ object AutoExperiments : Module(
 
         on<ScreenEvent.MouseClick> {
             if (handler == null) return@on
-            if (mc.screen !is AbstractContainerScreen<*>) return@on
+            if (client.screen !is AbstractContainerScreen<*>) return@on
 
             cancel()
         }
 
         on<ScreenEvent.MouseRelease> {
             if (handler == null) return@on
-            if (mc.screen !is AbstractContainerScreen<*>) return@on
+            if (client.screen !is AbstractContainerScreen<*>) return@on
 
             cancel()
         }
@@ -62,9 +64,9 @@ object AutoExperiments : Module(
             handler?.onSlotUpdate()
         }
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             val handler = handler ?: return@on
-            val screen = mc.screen as? AbstractContainerScreen<*> ?: return@on
+            val screen = client.screen as? AbstractContainerScreen<*> ?: return@on
 
             val now = System.currentTimeMillis()
             if (now - lastClick < delay()) return@on

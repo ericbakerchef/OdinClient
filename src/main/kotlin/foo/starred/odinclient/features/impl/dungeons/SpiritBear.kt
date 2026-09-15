@@ -48,19 +48,23 @@ import com.odtheking.odin.utils.render.textDim
 import com.odtheking.odin.utils.renderBoundingBox
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
 import com.odtheking.odin.utils.toFixed
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.drawTracer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.Blocks
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.drawTracer
+
+//? if >= 26.2
+//import com.odtheking.odin.utils.render.BoxStyle
 
 object SpiritBear : Module(
     name = "Spirit Bear (C)",
     description = "Utilities for Spirit Bear in floor 4.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val highlightSpirit by BooleanSetting("Highlight Bear", false, desc = "Highlights the spirit bear")
     private val color by ColorSetting("Highlight color", Colors.WHITE, true, desc = "The color of the highlight.").withDependency { highlightSpirit }
+    //~ if >= 26.2 '"Outline", listOf("Filled", "Outline", "Filled Outline")' -> 'BoxStyle.OUTLINE'
     private val renderStyle by SelectorSetting("Render Style", "Outline", listOf("Filled", "Outline", "Filled Outline"), desc = "Style of the box.").withDependency { highlightSpirit }
     private val tracer by BooleanSetting("Show Tracer", true, desc = "Draws a tracer to the spirit bear").withDependency { highlightSpirit }
     private val depthCheck by BooleanSetting("Depth Check", false, desc = "Disable to enable ESP").withDependency { highlightSpirit }
@@ -115,6 +119,7 @@ object SpiritBear : Module(
             if (entity?.isAlive == false) entity = null
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (!DungeonUtils.isFloor(4) || !DungeonUtils.inBoss || !highlightSpirit) return@on
             entity?.let {

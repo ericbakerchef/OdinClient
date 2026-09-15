@@ -2,11 +2,14 @@ package foo.starred.odinclient.features.impl.general
 
 import com.mojang.blaze3d.platform.InputConstants
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.events.core.onSend
 import com.odtheking.odin.features.Module
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.snowbird.api.client
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.screens.ChatScreen
@@ -15,16 +18,15 @@ import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
-import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
-import foo.starred.odinclient.utils.Category
 
 // Hypixel only checks for inventory walk on container clicks.
 // Therefore, by only moving when not clicking, we can bypass the check!
 object InventoryWalk : Module(
     name = "Inventory Walk (!!!)",
     description = "Use at your own risk! Only allows movement when not clicking.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
+    //~ if >= 26.2 '1, 500' -> '1..500'
     private val ping by NumberSetting("Ping", 200, 1, 500, unit = "ms", desc = "The ping to use for checks.")
 
     private var clicked = false
@@ -43,8 +45,8 @@ object InventoryWalk : Module(
         )
 
     init {
-        on<TickEvent.Start> {
-            val screen = mc.screen
+        on<TickStartEvent> {
+            val screen = client.screen
             if (screen == null) {
                 clicked = false
                 return@on
@@ -66,7 +68,7 @@ object InventoryWalk : Module(
         onReceive<ClientboundOpenScreenPacket> {
             clicked = false
             mc.execute {
-                val screen = mc.screen
+                val screen = client.screen
                 if (screen?.focused() == false) applyMovementKeys()
             }
         }

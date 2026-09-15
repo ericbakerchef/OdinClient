@@ -3,27 +3,32 @@ package foo.starred.odinclient.features.impl.dungeons
 import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.itemId
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
+import foo.starred.odinclient.events.InputEvent
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.mixin.accessors.InventoryAccessor
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.leftClick
+import foo.starred.snowbird.api.client
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
-import foo.starred.odinclient.events.InputEvent
-import foo.starred.odinclient.mixin.accessors.InventoryAccessor
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.leftClick
 
 object AutoSuperboom : Module(
     name = "Auto superboom",
     description = "Automatically swaps to superboom when you click a breakable wall!",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
+    //~ if >= 26.2 '1, 5' -> '1..5'
     private val minDelay by NumberSetting("Minimum delay", 1, 1, 5, unit = "ticks", desc = "The minimum delay for swapping.")
+    //~ if >= 26.2 '1, 10' -> '1..10'
     private val maxDelay by NumberSetting("Maximum delay", 3, 1, 10, unit = "ticks", desc = "The maximum delay for swapping.")
     private val swapBack by BooleanSetting("Swap back", false, desc = "Whether to swap back to the original item.")
+    //~ if >= 26.2 '1, 5' -> '1..5'
     private val minSB by NumberSetting("Min swap back delay", 1, 1, 5, unit = "ticks", desc = "The minimum delay for swapping back.").withDependency { swapBack }
+    //~ if >= 26.2 '1, 10' -> '1..10'
     private val maxSB by NumberSetting("Max swap back delay", 2, 1, 10, unit = "ticks", desc = "The maximum delay for swapping back.").withDependency { swapBack }
 
     private val set = setOf("SUPERBOOM_TNT", "INFINITE_SUPERBOOM_TNT")
@@ -34,13 +39,13 @@ object AutoSuperboom : Module(
 
     init {
         on<InputEvent.Mouse.Press> {
-            if (mc.screen != null) return@on
+            if (client.screen != null) return@on
             if (!DungeonUtils.inDungeons) return@on
             if (DungeonUtils.inBoss) return@on
-            val p = mc.player ?: return@on
-            val h = mc.hitResult as? BlockHitResult ?: return@on
+            val p = client.player ?: return@on
+            val h = client.hitResult as? BlockHitResult ?: return@on
 
-            val block = mc.level?.getBlockState(h.blockPos) ?: return@on
+            val block = client.level?.getBlockState(h.blockPos) ?: return@on
             if (block.block != Blocks.CRACKED_STONE_BRICKS) return@on
 
             val s = (p.inventory as InventoryAccessor).selectedSlot
@@ -54,8 +59,8 @@ object AutoSuperboom : Module(
             cancel()
         }
 
-        on<TickEvent.Start> {
-            val p = mc.player ?: return@on
+        on<TickStartEvent> {
+            val p = client.player ?: return@on
             if (tick == -1) return@on
             if (tick-- > 0) return@on
 
@@ -86,7 +91,7 @@ object AutoSuperboom : Module(
     }
 
     private fun fn(): Int? {
-        val player = mc.player ?: return null
+        val player = client.player ?: return null
         for (i in 0..8) if (player.inventory.getItem(i).itemId in set) return i
         return null
     }

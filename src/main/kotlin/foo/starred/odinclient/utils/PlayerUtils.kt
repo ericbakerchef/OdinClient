@@ -1,9 +1,9 @@
 package foo.starred.odinclient.utils
 
 import com.odtheking.odin.OdinMod.mc
+import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.inventory.ContainerInput
-import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
 
 fun rightClick() {
     val options = mc.options ?: return

@@ -42,34 +42,38 @@ import com.odtheking.odin.clickgui.settings.impl.MapSetting
 import com.odtheking.odin.clickgui.settings.impl.SelectorSetting
 import com.odtheking.odin.events.*
 import com.odtheking.odin.events.core.on
+import com.odtheking.odin.events.core.onReceive
 import com.odtheking.odin.features.Module
-import com.odtheking.odin.utils.Color
-import com.odtheking.odin.utils.Colors
-import com.odtheking.odin.utils.noControlCodes
+import com.odtheking.odin.utils.*
 import com.odtheking.odin.utils.render.drawStyledBox
-import com.odtheking.odin.utils.renderBoundingBox
-import com.odtheking.odin.utils.renderPos
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
 import com.odtheking.odin.utils.skyblock.dungeon.M7Phases
+import foo.starred.odinclient.OdinClient
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.odinclient.utils.command
+import foo.starred.odinclient.utils.drawTracer
+import foo.starred.snowbird.api.client
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.ambient.Bat
 import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.EnderMan
 import net.minecraft.world.entity.player.Player
-import foo.starred.odinclient.events.EntityMetadataEvent
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.drawTracer
+
+//? if >= 26.2
+//import com.odtheking.odin.utils.render.BoxStyle
 
 object Highlight : Module(
     name = "Highlight (C)",
     description = "Allows you to highlight selected entities.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val depthCheck by BooleanSetting("Depth Check", false, desc = "Disable to enable ESP")
     private val highlightStar by BooleanSetting("Highlight Starred Mobs", true, desc = "Highlights starred dungeon mobs.")
     private val starredTracer by BooleanSetting("Starred mobs tracers", desc = "Draws a tracer to the starred mobs.")
     val color by ColorSetting("Highlight color", Colors.WHITE, true, desc = "The color of the highlight.")
+    //~ if >= 26.2 '"Outline", listOf("Filled", "Outline", "Filled Outline")' -> 'BoxStyle.OUTLINE'
     private val renderStyle by SelectorSetting("Render Style", "Outline", listOf("Filled", "Outline", "Filled Outline"), desc = "Style of the box.")
     private val hideNonNames by BooleanSetting("Hide non-starred names", true, desc = "Hides names of entities that are not starred.")
     private val teammateClassGlow by BooleanSetting("Teammate Class Glow", true, desc = "Highlights dungeon teammates based on their class color.")
@@ -82,6 +86,7 @@ object Highlight : Module(
 
     private val dungeonMobSpawns = hashSetOf("Lurker", "Dreadlord", "Souleater", "Zombie", "Skeleton", "Skeletor", "Sniper", "Super Archer", "Spider", "Fels", "Withermancer", "Lost Adventurer", "Angry Archaeologist", "Frozen Adventurer", "Shadow Assassin")
     private val starredRegex = Regex("^.*✯ .*\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?[kM]?❤$")
+    private val colorRegex = Regex("^(.*?)(?:\\s+#?([0-9a-fA-F]{6}))?$")
 
     val highlightMap by MapSetting("highlightMap", mutableMapOf<String, Color>())
 
@@ -94,8 +99,9 @@ object Highlight : Module(
     init {
         OdinMod.logger.debug("Loaded ${highlightMap.entries.size}")
 
-        on<EntityMetadataEvent> {
-            if (!entity.isAlive) return@on
+        onReceive<ClientboundSetEntityDataPacket> {
+            val entity = client.level?.getEntity(id()) ?: return@onReceive
+            if (!entity.isAlive) return@onReceive
             val d = DungeonUtils.inDungeons
             val b = DungeonUtils.inBoss
             val p = DungeonUtils.getF7Phase()
@@ -106,10 +112,10 @@ object Highlight : Module(
                 }
 
                 d && !b && highlightBats && entity is Bat && !entity.isPassenger && !entity.isInvisible -> {
-                    val player = mc.player ?: return@on
+                    val player = mc.player ?: return@onReceive
                     if (player.distanceTo(entity) < 1.0) {
                         spiritSceptreIds.add(entity.id)
-                        return@on
+                        return@onReceive
                     }
                 }
 
@@ -118,25 +124,26 @@ object Highlight : Module(
                 }
 
                 !b && (highlightStar || highlightMap.isNotEmpty()) && entity is ArmorStand -> {
-                    val rawName = entity.customName?.string?.noControlCodes ?: return@on
+                    val rawName = entity.customName?.string?.noControlCodes ?: return@onReceive
                     val nameLower = rawName.lowercase()
 
                     if (highlightStar && dungeonMobSpawns.any(rawName::contains)) {
                         val starred = starredRegex.matches(rawName)
-                        if (hideNonNames && entity.isInvisible && !starred) return@on
+                        if (hideNonNames && entity.isInvisible && !starred) return@onReceive
                         if (starred && checkedIds.add(entity.id)) {
                             entity.fn(true)?.let { starredIds.add(it.id) }
                         }
                     }
 
                     if (highlightMap.isNotEmpty()) {
-                        val match = highlightMap.entries.firstOrNull { nameLower.contains(it.key) } ?: return@on
+                        val match = highlightMap.entries.firstOrNull { nameLower.contains(it.key) } ?: return@onReceive
                         entity.fn(true)?.let { customIds[it.id] = match.value }
                     }
                 }
             }
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (customIds.isEmpty() && starredIds.isEmpty() && witherIds.isEmpty() && !highlightBats) return@on
 

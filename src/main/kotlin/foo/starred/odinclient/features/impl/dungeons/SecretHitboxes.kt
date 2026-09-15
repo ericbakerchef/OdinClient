@@ -4,18 +4,18 @@ import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.AttachFace
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import foo.starred.odinclient.utils.Category
 
 object SecretHitboxes : Module(
     name = "Secret Hitboxes",
     description = "Extends the hitboxes of secret blocks to a full block.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     val lever by BooleanSetting("Lever", false, desc = "Extends the lever hitbox.")
     val oldLeverStyle by BooleanSetting("1.8 lever hitbox", true, desc = "Use the 1.8 lever hitbox.").withDependency { lever }

@@ -11,17 +11,17 @@ import com.odtheking.odin.utils.itemId
 import com.odtheking.odin.utils.loreString
 import com.odtheking.odin.utils.render.textDim
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
+import foo.starred.odinclient.events.InteractEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.level.block.Blocks
-import foo.starred.odinclient.events.InteractEvent
-import foo.starred.odinclient.utils.Category
 
 object BreakerHelper : Module(
     name = "Breaker Helper",
     description = "Utilities for Dungeon Breaker.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val chargesRegex = Regex("Charges: (\\d+)/(\\d+)⸕")
     private var charges = 0

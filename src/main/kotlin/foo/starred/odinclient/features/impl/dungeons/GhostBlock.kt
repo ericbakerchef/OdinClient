@@ -2,26 +2,26 @@ package foo.starred.odinclient.features.impl.dungeons
 
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.KeybindSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.events.core.onSend
 import com.odtheking.odin.features.Module
 import com.odtheking.odin.utils.itemId
 import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.skyblock.LocationUtils
+import foo.starred.odinclient.events.TickStartEvent
+import foo.starred.odinclient.api.category.OdinClientCategory
+import foo.starred.snowbird.api.client
+import foo.starred.snowbird.api.inputs.impl.GenericInputState
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import org.lwjgl.glfw.GLFW
-import foo.starred.odinclient.utils.Category
-import foo.starred.snowbird.api.bound
-import foo.starred.snowbird.api.pressed
 
 object GhostBlock : Module(
     name = "Ghost Block",
     description = "Turns blocks you look at into ghost blocks.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val UAYOR by BooleanSetting("Use at your own risk", desc = "This feature can get you banned if used improperly.")
     private val stonkGhostBlock by BooleanSetting("Stonk Ghost Block", true, desc = "Creates a ghost block when right-clicking with a pickaxe.")
@@ -31,7 +31,11 @@ object GhostBlock : Module(
         Blocks.ACACIA_DOOR, Blocks.BIRCH_DOOR, Blocks.DARK_OAK_DOOR, Blocks.JUNGLE_DOOR, Blocks.OAK_DOOR, Blocks.SPRUCE_DOOR, Blocks.MANGROVE_DOOR, Blocks.CHERRY_DOOR, Blocks.BAMBOO_DOOR, Blocks.CRIMSON_DOOR, Blocks.WARPED_DOOR, Blocks.IRON_DOOR,
         Blocks.ANVIL, Blocks.CHIPPED_ANVIL, Blocks.DAMAGED_ANVIL,
         Blocks.BEACON,
+        //? if >= 26.2 {
+        /*Blocks.BED.white(), Blocks.BED.orange(), Blocks.BED.magenta(), Blocks.BED.lightBlue(), Blocks.BED.yellow(), Blocks.BED.lime(), Blocks.BED.pink(), Blocks.BED.gray(), Blocks.BED.lightGray(), Blocks.BED.cyan(), Blocks.BED.purple(), Blocks.BED.blue(), Blocks.BED.brown(), Blocks.BED.green(), Blocks.BED.red(), Blocks.BED.black(),
+        *///? } else {
         Blocks.WHITE_BED, Blocks.ORANGE_BED, Blocks.MAGENTA_BED, Blocks.LIGHT_BLUE_BED, Blocks.YELLOW_BED, Blocks.LIME_BED, Blocks.PINK_BED, Blocks.GRAY_BED, Blocks.LIGHT_GRAY_BED, Blocks.CYAN_BED, Blocks.PURPLE_BED, Blocks.BLUE_BED, Blocks.BROWN_BED, Blocks.GREEN_BED, Blocks.RED_BED, Blocks.BLACK_BED,
+        //? }
         Blocks.BREWING_STAND,
         Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM,
         Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.ENDER_CHEST,
@@ -57,13 +61,11 @@ object GhostBlock : Module(
     init {
         this.registerSetting(ghostBlockKey)
 
-        on<TickEvent.Start> {
+        on<TickStartEvent> {
             if (!LocationUtils.isInSkyblock) return@on
-            if (mc.screen != null) return@on
+            if (client.screen != null) return@on
 
-            val a = ghostBlockKey.value.value
-            if (!a.bound) return@on
-            if (!a.pressed) return@on
+            if (!GenericInputState.pressed(ghostBlockKey.value)) return@on
 
             val hit = (mc.hitResult as? BlockHitResult) ?: return@on
             toAir(hit.blockPos)
@@ -71,7 +73,7 @@ object GhostBlock : Module(
 
         onSend<ServerboundUseItemOnPacket> {
             if (!LocationUtils.isInSkyblock) return@onSend
-            if (mc.screen != null) return@onSend
+            if (client.screen != null) return@onSend
             if (!stonkGhostBlock) return@onSend
 
             val item = mc.player?.getItemInHand(hand) ?: return@onSend

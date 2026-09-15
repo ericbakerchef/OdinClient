@@ -38,19 +38,15 @@ import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.ColorSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.RenderEvent
-import com.odtheking.odin.events.TickEvent
+import com.odtheking.odin.events.*
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
+import com.odtheking.odin.utils.*
 import com.odtheking.odin.utils.Color.Companion.multiplyAlpha
-import com.odtheking.odin.utils.Colors
-import com.odtheking.odin.utils.addVec
-import com.odtheking.odin.utils.itemId
 import com.odtheking.odin.utils.render.drawFilledBox
 import com.odtheking.odin.utils.render.drawLine
 import com.odtheking.odin.utils.render.drawWireFrameBox
-import com.odtheking.odin.utils.renderBoundingBox
-import com.odtheking.odin.utils.renderPos
+import foo.starred.odinclient.api.category.OdinClientCategory
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
@@ -62,7 +58,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
-import foo.starred.odinclient.utils.Category
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -70,7 +65,7 @@ import kotlin.math.sin
 object Trajectories : Module(
     name = "Trajectories",
     description = "Shows the trajectories of arrows, snowballs, etc.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val bows by BooleanSetting("Bows", true, desc = "Render trajectories of bow arrows.")
     private val pearls by BooleanSetting("Pearls", true, desc = "Render trajectories of ender pearls.")
@@ -78,9 +73,13 @@ object Trajectories : Module(
     private val boxes by BooleanSetting("Show Boxes", true, desc = "Shows boxes displaying where arrows or pearls will hit.")
     private val entities by BooleanSetting("Show Entities", true, desc = "Show boxes highlighting entities which the arrows will hit.")
     private val lines by BooleanSetting("Show Lines", true, desc = "Shows the trajectory as a line.")
+    //~ if >= 26.2 '1, 120' -> '1..120'
     private val range by NumberSetting("Solver Range", 30, 1, 120, 1, desc = "How many ticks are simulated.")
+    //~ if >= 26.2 '0.1f, 5.0' -> '0.1..5.0'
     private val width by NumberSetting("Line Width", 1f, 0.1f, 5.0, 0.1f, desc = "The width of the line.")
+    //~ if >= 26.2 '0.1f, 5.0' -> '0.1..5.0'
     private val planeSize by NumberSetting("Plane Size", 2f, 0.1f, 5.0, 0.1f, desc = "The size of the plane.").withDependency { plane }
+    //~ if >= 26.2 '0.5f, 3.0f' -> '0.5..3.0'
     private val boxSize by NumberSetting("Box Size", 0.5f, 0.5f, 3.0f, 0.1f, desc = "The size of the box.").withDependency { boxes }
     private val color by ColorSetting("Color", Colors.MINECRAFT_DARK_AQUA, true, desc = "The color of the trajectory.")
     private val depth by BooleanSetting("Depth Check", true, desc = "Whether or not to depth check the trajectory.")
@@ -102,6 +101,7 @@ object Trajectories : Module(
             if ((lastCharge - charge) > 1f) lastCharge = charge
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             entityRenderQueue.clear()
             boxRenderQueue.clear()
@@ -206,6 +206,7 @@ object Trajectories : Module(
         return lines to rayTraceHit
     }
 
+    //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
     private fun RenderEvent.Extract.drawPlaneCollision(hit: BlockHitResult) {
         val (vec1, vec2) = when (hit.direction) {
             Direction.DOWN, Direction.UP -> hit.location.addVec(-0.15 * planeSize, -0.02, -0.15 * planeSize) to hit.location.addVec(0.15 * planeSize, 0.02, 0.15 * planeSize)
@@ -216,6 +217,7 @@ object Trajectories : Module(
         drawFilledBox(AABB(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z), color.multiplyAlpha(0.5f), depth)
     }
 
+    //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
     private fun RenderEvent.Extract.drawCollisionBoxes(isPearl: Boolean) {
         if (isPearl) {
             pearlImpactPos?.let { aabb ->

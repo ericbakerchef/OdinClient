@@ -1,23 +1,22 @@
 package foo.starred.odinclient.features.impl.general
 
-import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.serialization.Codec
 import com.odtheking.odin.clickgui.settings.Setting.Companion.withDependency
 import com.odtheking.odin.clickgui.settings.impl.BooleanSetting
 import com.odtheking.odin.clickgui.settings.impl.KeybindSetting
 import com.odtheking.odin.clickgui.settings.impl.NumberSetting
-import com.odtheking.odin.events.TickEvent
 import com.odtheking.odin.events.core.on
 import com.odtheking.odin.features.Module
+import com.odtheking.odin.utils.getChatBreak
 import com.odtheking.odin.utils.itemId
+import com.odtheking.odin.utils.modMessage
+import foo.starred.odinclient.api.category.OdinClientCategory
 import foo.starred.odinclient.api.storage.JsonStore
+import foo.starred.odinclient.events.TickStartEvent
 import foo.starred.odinclient.mixin.accessors.KeyMappingAccessor
-import foo.starred.odinclient.utils.Category
-import foo.starred.odinclient.utils.leftClick
-import foo.starred.odinclient.utils.nullableID
-import foo.starred.odinclient.utils.nullableUUID
-import foo.starred.odinclient.utils.rightClick
-import foo.starred.snowbird.api.bound
+import foo.starred.odinclient.utils.*
+import foo.starred.snowbird.api.client
+import foo.starred.snowbird.api.inputs.impl.GenericInputState
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.phys.BlockHitResult
 import org.lwjgl.glfw.GLFW
@@ -25,9 +24,9 @@ import org.lwjgl.glfw.GLFW
 object AutoClicker : Module(
     name = "Auto Clicker",
     description = "Auto clicker with options for left-click, right-click, or both.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
-    private val whiteListOnly by BooleanSetting("Whitelist only", desc = "Only click when holding a whitelisted item, whitelist using \"/autoclicker add [left|right]\" while holding the item.")
+    private val whiteListOnly by BooleanSetting("Whitelist only", desc = "Only click when holding a whitelisted item, whitelist using \"/odc ac add [left|right]\" while holding the item.")
     private val allowBreaking by BooleanSetting("Allow breaking blocks", desc = "Allows you to break blocks when auto clicking.")
     private val blockBreaker by BooleanSetting("Block dungeon breaker", true, desc = "Prevents auto clicker from working with Dungeon Breaker.")
     private val terminatorOnly by BooleanSetting("Terminator Only", true, desc = "Only click when the terminator and right click are held.")
@@ -74,15 +73,15 @@ object AutoClicker : Module(
             if (blockBreaker && h1 == "DUNGEONBREAKER") return@on
 
             val h2 = held()
-            val a = !whiteListOnly || h2 in leftWhitelist.value
-            val b = !whiteListOnly || h2 in rightWhitelist.value
+            val a = !whiteListOnly || h2 in left.value
+            val b = !whiteListOnly || h2 in right.value
             if (!a && !b) return@on
 
             val level = mc.level ?: return@on
             val hit = mc.hitResult as? BlockHitResult
 
-            val lc = a && enableLeftClick && leftClickKeybind.value.isPressed()
-            val rc = b && enableRightClick && rightClickKeybind.value.isPressed()
+            val lc = a && enableLeftClick && GenericInputState.pressed(leftClickKeybind.value)
+            val rc = b && enableRightClick && GenericInputState.pressed(rightClickKeybind.value)
 
             if (hit != null && !level.getBlockState(hit.blockPos).isAir && lc && allowBreaking) {
                 KeyMapping.set((mc.options.keyAttack as KeyMappingAccessor).boundKey, true)

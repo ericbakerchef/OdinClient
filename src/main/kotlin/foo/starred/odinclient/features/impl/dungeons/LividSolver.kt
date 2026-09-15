@@ -47,7 +47,7 @@ import com.odtheking.odin.utils.modMessage
 import com.odtheking.odin.utils.render.drawWireFrameBox
 import com.odtheking.odin.utils.render.textDim
 import com.odtheking.odin.utils.skyblock.dungeon.DungeonUtils
-import foo.starred.odinclient.utils.Category
+import foo.starred.odinclient.api.category.OdinClientCategory
 import foo.starred.odinclient.utils.drawTracer
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
@@ -58,7 +58,7 @@ import net.minecraft.world.level.block.Blocks
 object LividSolver : Module(
     name = "Livid Solver (C)",
     description = "Provides a visual cue for the correct Livid's location in the boss fight.",
-    category = Category.CHEATS
+    category = OdinClientCategory.CHEATS
 ) {
     private val depthCheck by BooleanSetting("Depth Check", false, desc = "Disable to enable ESP")
     private val tracer by BooleanSetting("Tracer", true, desc = "Displays a tracer to the livid") // mi0 c:
@@ -80,9 +80,9 @@ object LividSolver : Module(
     private val lividStartRegex = Regex("^\\[BOSS] Livid: Welcome, you've arrived right on time\\. I am Livid, the Master of Shadows\\.$")
 
     init {
-        on<ChatMessageEvent> {
+        on<MessageEvent.Chat> {
             if (!DungeonUtils.inDungeons || !DungeonUtils.isFloor(5)) return@on
-            if (value.matches(lividStartRegex)) invulnTime = 390
+            if (message.matches(lividStartRegex)) invulnTime = 390
         }
 
         on<BlockUpdateEvent> {
@@ -100,6 +100,7 @@ object LividSolver : Module(
             }
         }
 
+        //~ if >= 26.2 'RenderEvent.Extract' -> 'RenderExtractEvent'
         on<RenderEvent.Extract> {
             if (!DungeonUtils.inBoss || !DungeonUtils.isFloor(5)) return@on
             currentLivid.entity?.let {
@@ -121,14 +122,23 @@ object LividSolver : Module(
     }
 
     private enum class Livid(val entityName: String, val colorCode: Char, val color: Color, val wool: Block) {
+        //~ if >= 26.2 'WHITE_WOOL' -> 'WOOL.white()'
         VENDETTA("Vendetta", 'f', Colors.WHITE, Blocks.WHITE_WOOL),
+        //~ if >= 26.2 'MAGENTA_WOOL' -> 'WOOL.magenta()'
         CROSSED("Crossed", 'd', Colors.MINECRAFT_DARK_PURPLE, Blocks.MAGENTA_WOOL),
+        //~ if >= 26.2 'YELLOW_WOOL' -> 'WOOL.yellow()'
         ARCADE("Arcade", 'e', Colors.MINECRAFT_YELLOW, Blocks.YELLOW_WOOL),
+        //~ if >= 26.2 'LIME_WOOL' -> 'WOOL.lime()'
         SMILE("Smile", 'a', Colors.MINECRAFT_GREEN, Blocks.LIME_WOOL),
+        //~ if >= 26.2 'GRAY_WOOL' -> 'WOOL.gray()'
         DOCTOR("Doctor", '7', Colors.MINECRAFT_GRAY, Blocks.GRAY_WOOL),
+        //~ if >= 26.2 'PURPLE_WOOL' -> 'WOOL.purple()'
         PURPLE("Purple", '5', Colors.MINECRAFT_DARK_PURPLE, Blocks.PURPLE_WOOL),
+        //~ if >= 26.2 'BLUE_WOOL' -> 'WOOL.blue()'
         SCREAM("Scream", '9', Colors.MINECRAFT_BLUE, Blocks.BLUE_WOOL),
+        //~ if >= 26.2 'GREEN_WOOL' -> 'WOOL.green()'
         FROG("Frog", '2', Colors.MINECRAFT_DARK_GREEN, Blocks.GREEN_WOOL),
+        //~ if >= 26.2 'RED_WOOL' -> 'WOOL.red()'
         HOCKEY("Hockey", 'c', Colors.MINECRAFT_RED, Blocks.RED_WOOL);
 
         var entity: Player? = null
