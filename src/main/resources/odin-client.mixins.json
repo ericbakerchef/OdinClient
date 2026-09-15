@@ -2,6 +2,7 @@
   "required": false,
   "package": "foo.starred.odinclient.mixin",
   "compatibilityLevel": "JAVA_21",
+  "plugin": "foo.starred.odinclient.mixin.loader.OdinClientMixinLoaderPlugin",
   "mixins": [],
   "injectors": {
     "defaultRequire": 1
