@@ -6,7 +6,7 @@ fabric-api = "0.158.0+26.2"
 odin = "s14NefT2"
 snowbird = "024+26.2"
 cascade = "041+26.2"
-updater = "1.0.8+26.2"
+updater = "1.0.9+26.2"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
