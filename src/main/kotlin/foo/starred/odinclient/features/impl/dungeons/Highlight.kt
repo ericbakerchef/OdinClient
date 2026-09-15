@@ -182,6 +182,52 @@ object Highlight : Module(
             spiritSceptreIds.clear()
             checkedIds.clear()
         }
+
+        command {
+            "highlight".then {
+                "add" / greedyString("arg") {
+                    val arg = string("arg")
+                    val (key, color) = arg.parse() ?: return@greedyString modMessage("Invalid format. Use: /highlight add <mob name> [#RRGGBB or #RRGGBBAA]")
+                    if (highlightMap.containsKey(key)) return@greedyString modMessage("\"$key\" is already highlighted.")
+
+                    highlightMap[key] = color ?: Highlight.color
+
+                    OdinClient.config.save()
+                    modMessage(buildString {
+                        append("Added \"$key\" to highlight list")
+                        color?.let { append(" with color #%02X%02X%02X".format(it.red, it.green, it.blue)) }
+                        append(".")
+                    })
+                }
+            }
+
+            "remove" / greedyString("name") {
+                val key = string("name").trim().lowercase()
+                if (highlightMap.remove(key) == null) return@greedyString modMessage("\"$key\" isn't highlighted.")
+
+                OdinClient.config.save()
+                modMessage("Removed \"$key\" from highlight list.")
+            }
+
+            "clear" {
+                if (highlightMap.isEmpty()) return@invoke modMessage("Highlight list is already empty.")
+
+                highlightMap.clear()
+
+                OdinClient.config.save()
+                modMessage("Highlight list cleared.")
+            }
+
+            "list" {
+                if (highlightMap.isEmpty()) return@invoke modMessage("Highlight list is empty.")
+
+                val text = highlightMap.entries.joinToString("\n") { (name, color) ->
+                    "$name - #%02X%02X%02X".format(color.red, color.green, color.blue)
+                }
+
+                modMessage("Highlight list:\n$text")
+            }
+        }
     }
 
     private fun ArmorStand.fn(vis: Boolean = false): Entity? {
@@ -201,6 +247,15 @@ object Highlight : Module(
             is WitherBoss -> true
             else -> entity is EnderMan || (vis || !entity.isInvisible)
         }
+
+    private fun String.parse(): Pair<String, Color?>? {
+        val match = colorRegex.matchEntire(trim()) ?: return null
+        val name = match.groupValues[1].trim().takeIf { it.isNotEmpty() } ?: return null
+        val hex = match.groupValues[2]
+
+        return name.lowercase() to if (hex.isNotEmpty()) Color(hex + "ff") else null
+    }
+
 
     @JvmStatic
     fun getTeammateColor(entity: Entity): Int? {

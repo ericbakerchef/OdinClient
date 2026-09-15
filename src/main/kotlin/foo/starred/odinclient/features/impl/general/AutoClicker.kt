@@ -31,18 +31,21 @@ object AutoClicker : Module(
     private val allowBreaking by BooleanSetting("Allow breaking blocks", desc = "Allows you to break blocks when auto clicking.")
     private val blockBreaker by BooleanSetting("Block dungeon breaker", true, desc = "Prevents auto clicker from working with Dungeon Breaker.")
     private val terminatorOnly by BooleanSetting("Terminator Only", true, desc = "Only click when the terminator and right click are held.")
+    //~ if >= 26.2 '3.0, 15.0' -> '3.0..15.0'
     private val cps by NumberSetting("Clicks Per Second", 5.0f, 3.0, 15.0, .5, desc = "The amount of clicks per second to perform.").withDependency { terminatorOnly }
 
     private val enableLeftClick by BooleanSetting("Enable Left Click", true, desc = "Enable auto-clicking for left-click.").withDependency { !terminatorOnly }
     private val enableRightClick by BooleanSetting("Enable Right Click", true, desc = "Enable auto-clicking for right-click.").withDependency { !terminatorOnly }
+    //~ if >= 26.2 '3.0, 15.0' -> '3.0..15.0'
     private val leftCps by NumberSetting("Left Clicks Per Second", 5.0f, 3.0, 15.0, .5, desc = "The amount of left clicks per second to perform.").withDependency { !terminatorOnly }
+    //~ if >= 26.2 '3.0, 15.0' -> '3.0..15.0'
     private val rightCps by NumberSetting("Right Clicks Per Second", 5.0f, 3.0, 15.0, .5, desc = "The amount of right clicks per second to perform.").withDependency { !terminatorOnly }
     private val leftClickKeybind = KeybindSetting("Left Click", GLFW.GLFW_KEY_UNKNOWN, desc = "The keybind to hold for the auto clicker to click left click.").withDependency { !terminatorOnly }
     private val rightClickKeybind = KeybindSetting("Right Click", GLFW.GLFW_KEY_UNKNOWN, desc = "The keybind to hold for the auto clicker to click right click.").withDependency { !terminatorOnly }
 
-    private val scribble = JsonStore("features/autoClicker")
-    val leftWhitelist = scribble.mutableSet("leftWhitelist", Codec.STRING)
-    val rightWhitelist = scribble.mutableSet("rightWhitelist", Codec.STRING)
+    private val json = JsonStore("features/autoClicker")
+    private val left = json.mutableSet("leftWhitelist", Codec.STRING)
+    private val right = json.mutableSet("rightWhitelist", Codec.STRING)
 
     private var nlc = .0
     private var nrc = .0
@@ -51,11 +54,11 @@ object AutoClicker : Module(
         registerSetting(leftClickKeybind)
         registerSetting(rightClickKeybind)
 
-        on<TickEvent.Start> {
-            if (mc.screen != null) return@on
-            if (mc.player == null) return@on
-            if (mc.player!!.isUsingItem) return@on
-            if (mc.gameMode?.isDestroying ?: false) return@on
+        on<TickStartEvent> {
+            if (client.screen != null) return@on
+            if (client.player == null) return@on
+            if (client.player!!.isUsingItem) return@on
+            if (client.gameMode?.isDestroying ?: false) return@on
             val now = System.currentTimeMillis()
 
             if (terminatorOnly) {
@@ -96,17 +99,72 @@ object AutoClicker : Module(
                 rightClick()
             }
         }
+
+        command {
+            "ac".then {
+                "add" / "left" {
+                    val item = held() ?: return@invoke modMessage("Hold an item to whitelist.")
+                    if (item in left.value) return@invoke modMessage("\"$item\" is already in the left whitelist.")
+
+                    left.update { add(item) }
+                    modMessage("Added \"$item\" to the left whitelist.")
+                }
+
+                "add" / "right" {
+                    val item = held() ?: return@invoke modMessage("Hold an item to whitelist.")
+                    if (item in right.value) return@invoke modMessage("\"$item\" is already in the right whitelist.")
+
+                    right.update { add(item) }
+                    modMessage("Added \"$item\" to the right whitelist.")
+                }
+
+                "remove" / "left" {
+                    val item = held() ?: return@invoke modMessage("Hold an item to remove from whitelist.")
+                    if (item !in left.value) return@invoke modMessage("\"$item\" isn't in the left whitelist.")
+
+                    left.update { remove(item) }
+                    modMessage("Removed \"$item\" from the left whitelist.")
+                }
+
+                "remove" / "right" {
+                    val item = held() ?: return@invoke modMessage("Hold an item to remove from whitelist.")
+                    if (item !in right.value) return@invoke modMessage("\"$item\" isn't in the right whitelist.")
+
+                    right.update { remove(item) }
+                    modMessage("Removed \"$item\" from the right whitelist.")
+                }
+
+                "clear" / "left" {
+                    left.update { clear() }
+                    modMessage("Left whitelist cleared.")
+                }
+
+                "clear" / "right" {
+                    right.update { clear() }
+                    modMessage("Right whitelist cleared.")
+                }
+
+                "clear" / "all" {
+                    left.update { clear() }
+                    right.update { clear() }
+                    modMessage("All whitelists cleared.")
+                }
+
+                "list" {
+                    val left = left.value.joinToString(", ").ifEmpty { "empty" }
+                    val right = right.value.joinToString(", ").ifEmpty { "empty" }
+
+                    modMessage("Autoclicker whitelist:")
+                    modMessage("Left: $left")
+                    modMessage(getChatBreak().drop(20))
+                    modMessage("Right: $right")
+                }
+            }
+        }
     }
 
     fun held(): String? {
         val held = mc.player?.mainHandItem
         return held?.nullableUUID ?: held?.nullableID ?: held?.hoverName?.string
-    }
-
-    private fun InputConstants.Key.isPressed(): Boolean {
-        if (!value.bound) return false
-        val window = mc.window
-        return if (value > 7) InputConstants.isKeyDown(window, value)
-        else GLFW.glfwGetMouseButton(window.handle(), value) == GLFW.GLFW_PRESS
     }
 }

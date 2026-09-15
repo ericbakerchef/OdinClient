@@ -43,6 +43,8 @@ object OdinClient : ClientModInitializer {
     const val MOD_VERSION: String = /*$ mod_version*/ "0.3.2-r1"
     val moduleConfig: ModuleConfig = ModuleConfig("odinClient")
     val joinListeners = mutableListOf<() -> Unit>()
+    @JvmField
+    var stream: Boolean = false
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
@@ -52,6 +54,13 @@ object OdinClient : ClientModInitializer {
         ModuleManager.registerModules(moduleConfig, *modulesToRegister)
         EventBus.subscribe(UpdateNotifier)
         EventBus.subscribe(ImportantFeature)
+
+        command {
+            "stream" / "toggle" {
+                stream = !stream
+                modMessage("Stream mode is now: $stream.")
+            }
+        }
 
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             for (fn in joinListeners.toList()) fn.invoke()

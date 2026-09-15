@@ -99,6 +99,41 @@ object AutoSell : Module(
                 break
             }
         }
+
+        command {
+            "sell".then {
+                "add" {
+                    val lowercase = client.player?.mainHandItem?.hoverName?.string?.stripped()?.lowercase() ?: return@invoke modMessage("Either hold an item or write an item name to be added to autosell.")
+                    if (lowercase in sellList) return@invoke modMessage("$lowercase is already in the Auto sell list.")
+
+                    modMessage("Added \"$lowercase\" to the Auto sell list.")
+                    sellList.add(lowercase)
+                    OdinClient.config.save()
+                }
+
+                "remove" {
+                    val lowercase = client.player?.mainHandItem?.hoverName?.string?.stripped()?.lowercase() ?: return@invoke modMessage("Either hold an item or write an item name to be removed from autosell.")
+                    if (lowercase !in sellList) return@invoke modMessage("$lowercase is not in the Auto sell list.")
+
+                    modMessage("Removed \"$lowercase\" from the Auto sell list.")
+                    sellList.remove(lowercase)
+                    OdinClient.config.save()
+                }
+
+                "clear" {
+                    modMessage("Auto sell list cleared.")
+                    sellList.clear()
+                    OdinClient.config.save()
+                }
+
+                "list" {
+                    modMessage("Auto sell list (${sellList.size}):")
+                    for (item in sellList) {
+                        modMessage("  §b${item}")
+                    }
+                }
+            }
+        }
     }
 
     private fun delay() {
